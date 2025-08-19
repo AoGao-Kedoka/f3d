@@ -762,6 +762,10 @@ interactor& interactor_impl::initCommands()
         {
           mode = "ssaa";
         }
+        else if (mode == "ssaa")
+        {
+          mode = "taa";
+        }
         else
         {
           enabled = false;
