@@ -227,6 +227,7 @@ PYBIND11_MODULE(pyf3d, module)
   utils //
     .def_static("text_distance", &f3d::utils::textDistance)
     .def_static("collapse_path", &f3d::utils::collapsePath)
+    .def_static("tokenize", &f3d::utils::tokenize, py::arg("str"), py::arg("keep_comments") = true)
     .def_static(
       "glob_to_regex", &f3d::utils::globToRegex, py::arg("glob"), py::arg("path_separator") = '/')
     .def_static("get_env", &f3d::utils::getEnv)
@@ -277,25 +278,43 @@ PYBIND11_MODULE(pyf3d, module)
       "request_render", &f3d::interactor::requestRender, "Request a render on the next event loop")
     .def("init_commands", &f3d::interactor::initCommands,
       "Remove all commands and add all default command callbacks")
-    .def("add_command", &f3d::interactor::addCommand, "Add a command")
+    .def("add_command", &f3d::interactor::addCommand, "Add a command", py::arg("action"),
+      py::arg("callback"), py::arg("doc") = std::nullopt, py::arg("completionCallback") = nullptr)
     .def("remove_command", &f3d::interactor::removeCommand, "Remove a command")
     .def("get_command_actions", &f3d::interactor::getCommandActions, "Get all command actions")
-    .def("trigger_command", &f3d::interactor::triggerCommand, "Trigger a command")
+    .def("trigger_command", &f3d::interactor::triggerCommand, "Trigger a command",
+      py::arg("command"), py::arg("keep_comments") = true)
     .def("init_bindings", &f3d::interactor::initBindings,
       "Remove all bindings and add default bindings")
-    .def("add_binding",
-      py::overload_cast<const f3d::interaction_bind_t&, std::string, std::string,
-        std::function<std::pair<std::string, std::string>()>>(&f3d::interactor::addBinding),
-      "Add a binding command")
-    .def("add_binding",
-      py::overload_cast<const f3d::interaction_bind_t&, std::vector<std::string>, std::string,
-        std::function<std::pair<std::string, std::string>()>>(&f3d::interactor::addBinding),
-      "Add binding commands")
     .def("remove_binding", &f3d::interactor::removeBinding, "Remove interaction commands")
     .def("get_bind_groups", &f3d::interactor::getBindGroups)
     .def("get_binds_for_group", &f3d::interactor::getBindsForGroup)
     .def("get_binds", &f3d::interactor::getBinds)
-    .def("get_binding_documentation", &f3d::interactor::getBindingDocumentation);
+    .def("get_binding_documentation", &f3d::interactor::getBindingDocumentation)
+    .def("get_binding_type", &f3d::interactor::getBindingType);
+
+  py::enum_<f3d::interactor::BindingType>(interactor, "BindingType")
+    .value("CYCLIC", f3d::interactor::BindingType::CYCLIC)
+    .value("NUMERICAL", f3d::interactor::BindingType::NUMERICAL)
+    .value("TOGGLE", f3d::interactor::BindingType::TOGGLE)
+    .value("OTHER", f3d::interactor::BindingType::OTHER)
+    .export_values();
+
+  interactor
+    .def("add_binding",
+      py::overload_cast<const f3d::interaction_bind_t&, std::string, std::string,
+        std::function<std::pair<std::string, std::string>()>, f3d::interactor::BindingType>(
+        &f3d::interactor::addBinding),
+      "Add a binding command", py::arg("bind"), py::arg("command"), py::arg("group"),
+      py::arg("documentationCallback") = nullptr,
+      py::arg("type") = f3d::interactor::BindingType::OTHER)
+    .def("add_binding",
+      py::overload_cast<const f3d::interaction_bind_t&, std::vector<std::string>, std::string,
+        std::function<std::pair<std::string, std::string>()>, f3d::interactor::BindingType>(
+        &f3d::interactor::addBinding),
+      "Add binding commands", py::arg("bind"), py::arg("command"), py::arg("group"),
+      py::arg("documentationCallback") = nullptr,
+      py::arg("type") = f3d::interactor::BindingType::OTHER);
 
   py::enum_<f3d::interactor::MouseButton>(interactor, "MouseButton")
     .value("LEFT", f3d::interactor::MouseButton::LEFT)

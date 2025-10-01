@@ -42,7 +42,7 @@ F3D supports the following file formats:
 ## Reader options
 
 Readers can provide option that can be set using the `-D/--define` [command line option](OPTIONS.md).
-eg: `-DVDB.downsampling_factor=0.5`.
+eg: `-DVDB.downsampling_factor=0.5` or using the `set_reader_option` [command](COMMANDS.md).
 
 For booleans, 0 means false, not 0 means true. Unsigned int will interpret anything that is not a non-negative integer as the default value.
 
@@ -81,7 +81,7 @@ Currently, 3 different formats are supported by F3D:
 
 - `.ply`: Original 3DGS format
 - `.splat`: Format specified by https://github.com/antimatter15/splat. Does not support spherical harmonics.
-- `.spz`: Niantic's format specified by https://github.com/nianticlabs/spz
+- `.spz`: Niantic's format specified by https://github.com/nianticlabs/spz (v2 and v3)
 
 Note that no config files come with the `.ply` format because this format isn't dedicated to 3DGS only so we cannot generalize.
 If you are using `.ply` for 3DGS only, you can set up a config file similar to what is done for `.splat` or `.spz`.
