@@ -103,6 +103,8 @@
 #include <numbers>
 #include <sstream>
 
+#include <dlfcn.h>
+
 namespace
 {
 // Placement of the horizontal scalar bar
@@ -352,6 +354,52 @@ void vtkF3DRenderer::Initialize()
   this->RenderWindow->AddObserver(
     vtkCommand::WindowResizeEvent, this->ModernAxisWidgetResizeCallback);
 #endif
+
+  // Load renderdoc API, remove later
+  if (void* mod = dlopen("/home/gaoa/Tools/renderdoc_1.34/lib/librenderdoc.so", RTLD_NOW))
+  {
+    pRENDERDOC_GetAPI RENDERDOC_GetAPI = (pRENDERDOC_GetAPI)dlsym(mod, "RENDERDOC_GetAPI");
+    int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_1_2, (void**)&rdoc_api);
+    assert(ret == 1);
+  }
+
+  vtkNew<vtkCallbackCommand> startEventCallback;
+  startEventCallback->SetClientData(this);
+  startEventCallback->SetCallback(
+    [](vtkObject* const, unsigned long, void* clientData, void*)
+    {
+      vtkF3DRenderer* self = static_cast<vtkF3DRenderer*>(clientData);
+      auto rdoc = static_cast<RENDERDOC_API_1_1_2*>(self->rdoc_api);
+      self->counter--;
+      if (self->counter > 0 || self->counter < 0)
+      {
+        return;
+      }
+      if (rdoc)
+      {
+        rdoc->StartFrameCapture(nullptr, nullptr);
+      }
+    });
+  this->RenderWindow->AddObserver(vtkCommand::StartEvent, startEventCallback);
+
+  vtkNew<vtkCallbackCommand> endEventCallback;
+  endEventCallback->SetClientData(this);
+  endEventCallback->SetCallback(
+    [](vtkObject* const, unsigned long, void* clientData, void*)
+    {
+      vtkF3DRenderer* self = static_cast<vtkF3DRenderer*>(clientData);
+      auto rdoc = static_cast<RENDERDOC_API_1_1_2*>(self->rdoc_api);
+      if (self->counter > 0 || self->counter < 0)
+      {
+        return;
+      }
+
+      if (rdoc)
+      {
+        rdoc->EndFrameCapture(nullptr, nullptr);
+      }
+    });
+  this->RenderWindow->AddObserver(vtkCommand::EndEvent, endEventCallback);
 }
 
 //----------------------------------------------------------------------------

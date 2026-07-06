@@ -26,6 +26,8 @@
 #include <map>
 #include <optional>
 
+#include "renderdoc_api.h"
+
 namespace fs = std::filesystem;
 
 class vtkCameraOrientationRepresentation;
@@ -903,6 +905,9 @@ private:
   bool PointSpritesUseInstancing = false;
 
   std::optional<bool> Unlit;
+
+  RENDERDOC_API_1_2_0* rdoc_api = nullptr;
+  int counter = 10;
 };
 
 #endif

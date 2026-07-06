@@ -102,6 +102,7 @@ set(classes
   vtkF3DUserRenderPass
   vtkF3DDisplayDepthRenderPass
   vtkF3DTAAPass
+  renderdoc_api
   )
 
 if (F3D_MODULE_UI)
